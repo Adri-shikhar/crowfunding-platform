@@ -1,3 +1,109 @@
 @import "tailwindcss";
-@import "@heroui/styles"; 
+@import "@heroui/styles";
 
+/* Dark mode is driven by a `.dark` class on <html> (no-flash script in the root
+   layout + DarkModeToggle). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ *
+ * Design tokens (light + dark). `--accent*` is the brand/role accent:
+ * the public site uses the indigo brand; each dashboard role overrides
+ * `--accent*` inline via DashboardLayout so the subtree re-themes.
+ * These are exposed to Tailwind below, so components style themselves
+ * with utilities like `bg-surface`, `text-heading`, `bg-accent`,
+ * `bg-accent/10`, `border-border` — no custom component classes.
+ * ------------------------------------------------------------------ */
+:root {
+  --bg: #f6f6fb;
+  --surface: #ffffff;
+  --surface-2: #f0f1f7;
+  --border: #e5e6ef;
+  --border-strong: #d3d5e4;
+
+  --heading: #141527;
+  --body: #40425a;
+  --label: #5c5e78;
+  --muted: #8688a1;
+
+  --brand: #574af0;
+  --brand-strong: #3f31d8;
+
+  --accent: var(--brand);
+  --accent-strong: var(--brand-strong);
+  --accent-fg: #ffffff;
+}
+
+.dark {
+  --bg: #0a0b12;
+  --surface: #14151f;
+  --surface-2: #1b1d29;
+  --border: #272a3a;
+  --border-strong: #363a4e;
+
+  --heading: #f3f4fb;
+  --body: #c3c5d6;
+  --label: #9799b1;
+  --muted: #6d6f88;
+
+  --brand: #8a7dff;
+  --brand-strong: #a99dff;
+
+  --accent: var(--brand);
+  --accent-strong: var(--brand-strong);
+  --accent-fg: #0a0b12;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-label: var(--label);
+  --color-muted: var(--muted);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-fg: var(--accent-fg);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --animate-float: float-slow 6s ease-in-out infinite;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--body);
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--heading);
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+}
+
+/* A few things Tailwind utilities can't reach: the Swiper internals and one
+   keyframe used by the homepage. */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.swiper-pagination-bullet { background: var(--muted) !important; opacity: 0.5; }
+.swiper-pagination-bullet-active { background: var(--accent) !important; opacity: 1; }
+.swiper-button-next, .swiper-button-prev { color: var(--accent) !important; }
+
+/* Hide scrollbars on horizontal nav rails without losing scroll. */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

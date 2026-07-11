@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@heroui/react";
+import { FiMail, FiLock } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthShell } from "@/components/AuthShell";
+import { GoogleButton } from "@/components/GoogleButton";
+import { Alert, Button, Field, TextInput } from "@/components/ui";
+import { emailValid, friendlyAuthError } from "@/lib/utils";
 
 export default function LoginPage() {
   const { logIn, logInWithGoogle } = useAuth();
@@ -13,16 +17,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    if (!emailValid(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     setLoading(true);
     try {
       await logIn(email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to log in");
+      setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -30,83 +39,76 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setError("");
-    setLoading(true);
+    setGoogleLoading(true);
     try {
       await logInWithGoogle();
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setError(friendlyAuthError(err));
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col justify-center px-4 py-12">
-      <h1 className="mb-2 text-3xl font-semibold tracking-tight">Log in</h1>
-      <p className="mb-8 text-neutral-600">
-        Welcome back. Sign in to continue.
-      </p>
-
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to manage your campaigns, credits, and contributions."
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-sm">
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-900"
-            placeholder="you@example.com"
-          />
-        </label>
+        <Field label="Email" htmlFor="email">
+          <div className="relative">
+            <FiMail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <TextInput
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="pl-10"
+              autoComplete="email"
+            />
+          </div>
+        </Field>
 
-        <label className="flex flex-col gap-1.5 text-sm">
-          Password
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-900"
-            placeholder="••••••••"
-          />
-        </label>
+        <Field label="Password" htmlFor="password">
+          <div className="relative">
+            <FiLock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <TextInput
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="pl-10"
+              autoComplete="current-password"
+            />
+          </div>
+        </Field>
 
-        {error ? (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error && <Alert tone="error">{error}</Alert>}
 
-        <Button type="submit" isDisabled={loading} className="w-full">
-          {loading ? "Signing in..." : "Log in"}
+        <Button type="submit" loading={loading} className="w-full">
+          Sign in
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-sm text-neutral-500">
-        <span className="h-px flex-1 bg-neutral-200" />
+      <div className="my-6 flex items-center gap-3 text-sm text-muted">
+        <span className="h-px flex-1 bg-border" />
         or
-        <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-border" />
       </div>
 
-      <Button
-        type="button"
-        variant="secondary"
-        isDisabled={loading}
-        onPress={handleGoogle}
-        className="w-full"
-      >
-        Continue with Google
-      </Button>
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading} />
 
-      <p className="mt-6 text-center text-sm text-neutral-600">
-        No account?{" "}
-        <Link href="/signup" className="font-medium text-neutral-900 underline">
-          Sign up
+      <p className="mt-6 text-center text-sm text-muted">
+        New to FundSpring?{" "}
+        <Link href="/signup" className="font-semibold text-accent hover:underline">
+          Create an account
         </Link>
       </p>
-    </main>
+    </AuthShell>
   );
 }
